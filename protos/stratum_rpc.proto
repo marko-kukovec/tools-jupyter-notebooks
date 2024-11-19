@@ -1,0 +1,662 @@
+syntax = "proto3";
+
+//package com.nicehash.proto.mining.rpc;
+
+//option java_package = "com.nicehash.proto.mining.rpc";
+
+// XServer -> NeoStratum: response RpcOrderCreateResponse
+// endpoint: /v1/stat/ping
+// method: POST
+message RpcStatPingRequest
+{
+    int32 algo = 1;
+    int64 timestamp = 2;
+}
+message RpcStatPingResponse
+{
+    int32 algo = 1;
+    int64 receive_timestamp = 2;
+    int64 response_timestamp = 3;
+    RpcResponseStatus status = 4;
+}
+
+// XServer -> NeoStratum: response RpcOrderCreateResponse
+// endpoint: /v1/order/create
+// method: POST
+message RpcOrderCreateRequest
+{
+    string order = 1;
+    int32 algo = 2;
+    int64 amount = 3;
+    double price = 4;
+    double limit = 5;
+    RpcOrderType type = 6;
+    string poolHost = 7;
+    int32 poolPort = 8;
+    string poolUser = 9;
+    string poolPass = 10;
+    reserved 11;
+}
+message RpcOrderCreateResponse
+{
+    string order = 1;
+    int32 algo = 2;
+    RpcResponseStatus status = 3;
+}
+// XServer -> NeoStratum: response RpcOrderCancelResponse
+// endpoint: /v1/order/cancel
+// method: POST
+message RpcOrderCancelRequest
+{
+    string order = 1;
+    int32 algo = 2;
+    string reason = 3;
+}
+message RpcOrderCancelResponse
+{
+    string order = 1;
+    int32 algo = 2;
+    RpcResponseStatus status = 3;
+}
+// XServer -> NeoStratum: response RpcOrderRefillResponse
+// endpoint: /v1/order/refill
+// method: POST
+message RpcOrderRefillRequest
+{
+    string order = 1;
+    int32 algo = 2;
+    int64 amount = 3;
+}
+message RpcOrderRefillResponse
+{
+    string order = 1;
+    int32 algo = 2;
+    RpcResponseStatus status = 3;
+}
+// XServer -> NeoStratum: response RpcOrderSetAmountResponse
+// endpoint: /v1/order/setAmount
+// method: POST
+message RpcOrderSetAmountRequest
+{
+    string order = 1;
+    int32 algo = 2;
+    int64 amount = 3;
+}
+message RpcOrderSetAmountResponse
+{
+    string order = 1;
+    int32 algo = 2;
+    RpcResponseStatus status = 3;
+}
+// XServer -> NeoStratum: response RpOrderSetLimitResponse
+// endpoint: /v1/order/setLimit
+// method: POST
+message RpcOrderSetLimitRequest
+{
+    string order = 1;
+    int32 algo = 2;
+    double limit = 3;
+    reserved 4;
+}
+message RpcOrderSetLimitResponse
+{
+    string order = 1;
+    int32 algo = 2;
+    RpcResponseStatus status = 3;
+}
+// XServer -> NeoStratum: response RpOrderSetPriceResponse
+// endpoint: /v1/order/setPrice
+// method: POST
+message RpcOrderSetPriceRequest
+{
+    string order = 1;
+    int32 algo = 2;
+    double price = 3;
+    reserved 4;
+}
+message RpcOrderSetPriceResponse
+{
+    string order = 1;
+    int32 algo = 2;
+    RpcResponseStatus status = 3;
+}
+// XServer -> NeoStratum: response RpcOrderUpdateResponse
+// endpoint: /v1/order/update
+// method: POST
+message RpcOrderUpdateRequest
+{
+    string order = 1;
+    int32 algo = 2;
+    int64 amount = 3;
+    int64 refill = 4;
+    double price = 5;
+    double limit = 6;
+}
+message RpcOrderUpdateResponse
+{
+    string order = 1;
+    int32 algo = 2;
+    RpcResponseStatus status = 3;
+}
+
+//////////////////////////////////////////
+// NeoStratum -> XServer
+//////////////////////////////////////////
+
+// response for the following requests:
+// - RpcRigRequest
+// - RpcOrderRequest
+// - RpcStratumStatsSummaryRequest
+message RpcResponse
+{
+    // present only when HTTP response code is not OK (2xx) - contains exception stack trace
+    string message = 1;
+}
+
+// POST /internal/v1/stratum/rig
+message RpcRigRequest
+{
+    string requestId = 1;
+    string stratumId = 2;
+    int64 intervalEndTime = 3;
+    int32 algo = 4;
+    int32 market = 5;
+    repeated RpcRigData rigs = 6;
+}
+message RpcRigData
+{
+    string btcAddress = 1;
+    string workerId = 2;
+    string rigId = 3;
+    int64 amountPaid = 4;
+    RpcRigSummaryData summary = 5;
+}
+message RpcRigSummaryData
+{
+    double difficulty = 1;
+    double speedAccepted = 2;
+    double speedRejectedTotal = 3;
+    double speedRejectedR1Target = 4;
+    double speedRejectedR2Stale = 5;
+    double speedRejectedR3Duplicate = 6;
+    double speedRejectedR4NTime = 7;
+    double speedRejectedR5Other = 8;
+    int32 proxyId = 9;
+    bool xnsub = 10;
+    int64 timeConnected = 11;
+    string ipAddress = 12;
+    string miner = 13;
+    //Share counts were not used in backend
+    reserved 14 to 20;
+}
+
+// POST /internal/v1/stratum/order
+message RpcOrderRequest
+{
+    string requestId = 1;
+    string stratumId = 2;
+    int64 intervalEndTime = 3;
+    int32 algo = 4;
+    int32 market = 5;
+    repeated RpcOrderData orders = 6;
+}
+message RpcOrderData
+{
+    string order = 1;
+    RpcOrderAmountData amount = 2;
+    RpcOrderSummaryData summary = 3;
+    repeated RpcPoolBlockRewardData poolBlockRewards = 4;
+}
+message RpcOrderAmountData
+{
+    int64 amountTotal = 1;
+    int64 amountPaid = 2;
+    RpcOrderAmountCompletionReason completionReason = 3;
+}
+message RpcOrderSummaryData
+{
+    string poolHost = 1;
+    int32 poolPort = 2;
+    string poolUser = 3;
+    string poolPass = 4;
+    bool isAlive = 5;
+    double limit = 6;
+    int64 refilled = 7;
+    RpcOrderType type = 8;
+    RpcPoolStat poolStat = 9;
+    repeated RpcBridgeData bridges = 10;
+    RpcBridgesDataSum bridgesDataSum = 14;
+    double price = 11;
+    int64 last_price_change_timestamp = 12;
+    int64 order_sequence_number = 13;
+}
+message RpcPoolStat
+{
+    double speedAccepted = 1;
+    double speedRejectedTotal = 2;
+    double speedRejectedR1Target = 3;
+    double speedRejectedR2Stale = 4;
+    double speedRejectedR3Duplicate = 5;
+    double speedRejectedR4NTime = 6;
+    double speedRejectedR5Other = 7;
+    double speedRejectedR6Worker = 8;
+    double speedRejectedR7Timeout = 9;
+    int32 sharesAccepted = 10;
+    int32 sharesRejectedTotal = 11;
+    int32 sharesRejectedR1Target = 12;
+    int32 sharesRejectedR2Stale = 13;
+    int32 sharesRejectedR3Duplicate = 14;
+    int32 sharesRejectedR4NTime = 15;
+    int32 sharesRejectedR5Other = 16;
+    int32 sharesRejectedR6Worker = 17;
+    int32 sharesRejectedR7Timeout = 18;
+    double sharesMaxDiff = 19;
+    //TODO: Deprecate globalMaxDiff, superseded by globalMaxDiffs
+    double globalMaxDiff = 20;
+    repeated RpcPoolGlobalDifficulties globalMaxDiffs = 21;
+}
+message RpcBridgeData
+{
+    int32 rigsCount = 1;
+    int32 jobsCount = 2;
+    double difficulty = 3;
+    //TODO deprecate fields 4, 5 and 7. Replaced by bridgesDataSum in RpcOrderSummaryData
+    //Fields 8-10 not used by backend, why are they here?
+    double speedAccepted = 4;
+    double speedRewarded = 5;
+    string status = 6;
+    double speedRejected = 7;
+    int32 sharesAccepted = 8;
+    int32 sharesRewarded = 9;
+    int32 sharesRejected = 10;
+}
+message RpcBridgesDataSum
+{
+    double speedAccepted = 1;
+    double speedRewarded = 2;
+    double speedRejected = 3;
+    //Fields 4-6 are not used by backend, why are they here?
+    int32 sharesAccepted = 4;
+    int32 sharesRewarded = 5;
+    int32 sharesRejected = 6;
+}
+message RpcPoolBlockRewardData
+{
+    string coin = 1;
+    int64 blockHeight = 2;
+    string blockHash = 3;
+    string payoutAddress = 4;
+    int64 payoutReward = 5;
+    string feeAddress = 6;
+    int64 feeReward = 7;
+    int64 time = 8;
+    string txid = 9;
+    bool isOrphan = 10;
+}
+message RpcPoolGlobalDifficulties
+{
+    string coin = 1;
+    double networkDifficulty = 2;
+}
+
+// POST /internal/v1/stratum/stats?algo=<int, algorithm_id>
+message RpcStratumStatsSummaryRequest
+{
+    string requestId = 1;
+    int32 algo = 2;
+    double price = 3;
+    int64 intervalEndTime = 4;
+}
+
+// end of New Stratum handling
+
+
+// Payclock -> NeoStratum: response RpcSpeedAmountResponse
+// endpoint: /v1/payclock/speedAmount
+// method: POST
+message RpcSpeedAmountRequest
+{
+    int32 algo = 1;
+}
+message RpcSpeedAmountResponse
+{
+    int32 algo = 1;
+    double speed = 2;
+    int64 amount = 3;
+    int64 lastRoundAmount = 4;
+    int64 lastRoundPaid = 5;
+    double standardSpeed = 6;
+    double fixedSpeed = 7;
+    double orderPrice = 8;
+    RpcResponseStatus status = 9;
+    double fixedOrderMinPrice = 10;
+    double fixedOrderMaxPrice = 11;
+    double fixedOrderAvgPrice = 12;
+    int32 fixedOrderRigCount = 13;
+    int32 fixedOrderCount = 14;
+    double standardOrderMinPrice = 15;
+    double standardOrderMaxPrice = 16;
+    double standardOrderAvgPrice = 17;
+    int32 standardOrderRigCount = 18;
+    int32 standardOrderCount = 19;
+    int32 market = 20;
+    int32 deadOrderCount = 21;
+}
+// Payclock -> NeoStratum: response RpcSetPriceResponse
+// endpoint: /v1/payclock/setPrice
+// method: POST
+message RpcSetPriceRequest
+{
+    int32 algo = 1;
+    double price = 2;
+}
+message RpcSetPriceResponse
+{
+    int32 algo = 1;
+    RpcResponseStatus status = 2;
+}
+//////////////////////////////////////////
+// Common
+//////////////////////////////////////////
+message RpcResponseStatus
+{
+    RpcResponseStatusCode status = 1;
+    RpcResponseError error = 2;
+}
+message RpcResponseError
+{
+    int32 code = 1;
+    string message = 2;
+}
+enum RpcResponseStatusCode
+{
+    unknown = 0;
+    success = 1;
+    failure = 2;
+}
+enum RpcOrderType
+{
+    standard = 0;
+    fixed = 1;
+}
+enum RpcOrderAmountCompletionReason {
+    unknowncompletionReason = 0;
+    cancelled = 1;
+    expired = 2;
+    completed = 3;
+    dead = 4;
+}
+
+//////////////////////////////////////////
+// Whitelist
+//////////////////////////////////////////
+// NeoStratum -> Main: response StratumStatsSummary
+// endpoint: /internal/v1/stratum/whiteList
+// method: POST
+message RpcStratumWhiteListRequest
+{
+    string stratumId = 1;
+}
+
+message RpcStratumWhiteListResponse
+{
+    repeated string ip_address = 2;
+    repeated string btc_address = 3;
+    RpcResponse status = 4;
+}
+
+// Main -> NeoStratum: response RpcStratumWhiteListAddResponse
+// endpoint: /v1/stratum/whiteListAdd
+// method: POST
+message RpcStratumWhiteListAddRequest
+{
+    repeated string ip_address = 1;
+    repeated string btc_address = 2;
+}
+
+message RpcStratumWhiteListAddResponse
+{
+    RpcResponseStatus status = 1;
+}
+
+// Main -> NeoStratum: response RpcStratumWhiteListRemoveResponse
+// endpoint: /v1/stratum/whiteListRemove
+// method: POST
+message RpcStratumWhiteListRemoveRequest
+{
+    repeated string ip_address = 1;
+    repeated string btc_address = 2;
+}
+
+message RpcStratumWhiteListRemoveResponse
+{
+    RpcResponseStatus status = 1;
+}
+
+//////////////////////////////////////////
+// Blacklist
+//////////////////////////////////////////
+message RpcBlackListEntry
+{
+    string address = 1;
+    string reason = 2;
+    int64 timestamp = 3;
+}
+
+// NeoStratum -> Main: response RpcResponse
+// endpoint: /internal/v1/stratum/blocked
+// method: POST
+message RpcStratumBlackListRequest
+{
+    string stratumId = 1;
+    repeated RpcBlackListEntry ip = 2;
+    repeated RpcBlackListEntry btc = 3;
+    int32 algo = 4;
+}
+
+// Main -> NeoStratum: response RpcStratumBlackListRemoveResponse
+// endpoint: /v1/stratum/blackListRemove
+// method: POST
+message RpcStratumBlackListRemoveRequest
+{
+    int32 algo = 1;
+    string ip_address = 2;
+    string btc_address = 3;
+}
+
+message RpcStratumBlackListRemoveResponse
+{
+    RpcResponseStatus status = 1;
+}
+
+// Main -> NeoStratum: response RpcStratumBlackListClearResponse
+// endpoint: /v1/stratum/blackListClear
+// method: POST
+message RpcStratumBlackListClearRequest
+{
+    int32 algo = 1;
+}
+
+message RpcStratumBlackListClearResponse
+{
+    RpcResponseStatus status = 1;
+}
+
+//////////////////////////////////////////
+// Remote configuration
+//////////////////////////////////////////
+message RpcStratumAlgoBridgeConfig
+{
+    double min_diff = 1;
+    double breach_speed = 2;
+    double breach_speed_min_diff = 3;
+    int32 fast_job_time = 4;
+    double reward_disconnect = 5;
+    double reward_fast_job = 6;
+}
+
+message RpcStratumAlgoRigConfig
+{
+    double default_share_diff = 1;
+    double min_share_diff = 2;
+    double max_share_diff = 3;
+    int32 vardiff_min_shares = 4;
+    int32 vardiff_max_shares = 5;
+}
+
+message RpcStratumAlgoValidatorAddress
+{
+    string ip = 1;
+    int32 port = 2;
+}
+
+message RpcStratumAlgoConfig
+{
+    int32 max_rigs_per_bridge = 1;
+    double rig_speed = 2;
+    int32 max_kills = 3;
+    RpcStratumAlgoBridgeConfig bridge = 4;
+    RpcStratumAlgoRigConfig rig = 5;
+    repeated RpcStratumAlgoValidatorAddress validator = 6;
+}
+
+// NeoStratum -> Main: response RpcStratumAlgoConfigGetResponse
+// endpoint: /internal/v1/stratum/configuration
+// Method: GET
+message RpcStratumAlgoConfigGetRequest
+{
+    string stratumId = 1;
+    int32 algo = 2;
+}
+
+message RpcStratumAlgoConfigGetResponse
+{
+    RpcStratumAlgoConfig config = 1;
+    RpcResponse status = 2;
+}
+
+// Main -> NeoStratum: response RpcStratumAlgoConfigSetResponse
+// endpoint: /v1/stratum/configuration
+// Method: POST
+message RpcStratumAlgoConfigSetRequest
+{
+    int32 algo = 1;
+    RpcStratumAlgoConfig config = 2;
+}
+
+message RpcStratumAlgoConfigSetResponse
+{
+    RpcResponseStatus status = 1;
+}
+
+//////////////////////////////////////////
+// Monitoring
+//////////////////////////////////////////
+
+message RpcMonitoringAlgorithmStats
+{
+    int32 order_count = 1;
+    int32 rig_count = 2;
+}
+
+message RpcMonitoringOrdersStats
+{
+    double jobs_per_second = 1;
+    int32 bridge_count = 2;
+    double accepted_shares_per_second = 3;
+    double rejected_shares_per_second_target = 4;
+    double rejected_shares_per_second_stale = 5;
+    double rejected_shares_per_second_duplicate = 6;
+    double rejected_shares_per_second_ntime = 7;
+    double rejected_shares_per_second_other = 8;
+    double rejected_shares_per_second_worker = 9;
+    double rejected_shares_per_second_timeout = 10;
+}
+
+message RpcMonitoringRigsStats
+{
+    double shares_per_second = 1;
+    double accepted_shares_per_second = 2;
+    double rejected_shares_per_second = 3;
+    double speed = 4;
+    double accepted_speed = 5;
+    double rejected_speed = 6;
+    double min_diff = 7;
+    double avg_diff = 8;
+    double max_diff = 9;
+    double rejected_shares_per_second_target = 10;
+    double rejected_shares_per_second_stale = 11;
+    double rejected_shares_per_second_duplicate = 12;
+    double rejected_shares_per_second_ntime = 13;
+    double rejected_shares_per_second_other = 14;
+}
+
+message RpcMonitoringValidatorsStats
+{
+    int32 timeouts = 1;
+    double min_response_milliseconds = 2;
+    double avg_response_milliseconds = 3;
+    double max_response_milliseconds = 4;
+    int32 errors = 5;
+}
+
+message RpcMonitoringPushStats
+{
+    double min_push_milliseconds = 1;
+    double avg_push_milliseconds = 2;
+    double max_push_milliseconds = 3;
+}
+
+// NeoStratum -> Main: response RpcResponse
+// endpoint: /internal/v1/stratum/monitoring/algorithm
+// method: POST
+message RpcMonitoringAlgorithmRequest
+{
+    string stratumId = 1;
+    int32 algo = 2;
+    RpcMonitoringAlgorithmStats algorithm_stats = 3;
+    RpcMonitoringOrdersStats orders_stats = 4;
+    RpcMonitoringRigsStats rigs_stats = 5;
+    RpcMonitoringValidatorsStats validators_stats = 6;
+    RpcMonitoringPushStats push_stats = 7;
+}
+
+message RpcMonitoringStrand
+{
+    int32 count = 1;
+    int32 avg_count = 2;
+    int32 max_count = 3;
+    string origin = 4;
+}
+
+// NeoStratum -> Main: response RpcResponse
+// endpoint: /internal/v1/stratum/monitoring/stratum
+// method: POST
+message RpcMonitoringStratumRequest
+{
+    string stratumId = 1;
+    int32 uptime = 2;
+    repeated RpcMonitoringStrand strand = 3;
+}
+
+// NeoStratum rigs order statistics data
+// used for tracking rig working on specific order in specific time period
+message RigOrderStatistic
+{
+    string requestId = 1;
+    string stratumId = 2;
+    int64 intervalEndTime = 3;
+    int32 algo = 4;
+    int32 market = 5;
+    repeated RigOrderData rigs = 6;
+}
+
+message RigOrderData
+{
+    string orderId = 1;
+    string btcAddress = 2;
+    string workerId = 3;
+    string rigId = 4;
+    string minerId = 5;
+    string ipAddress = 6;
+}
